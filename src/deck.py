@@ -117,11 +117,14 @@ if __name__ == '__main__': #Test
     assert deck.noOfCards() == 0
     
     from discardpile import Discardpile
+    from player import Player
     d=Discardpile()
-    d.putCard(Card(color.RED,4))
-    d.putCard(Card(color.BLUE,7))
-    d.putCard(Card(color.BLACK, 14))
-    d.putCard(Card(color.GREEN,0))
+    deck = Deck(d)
+    p = Player(0,deck,"TEST")
+    d.putCard(Card(color.RED,4), p)
+    d.putCard(Card(color.BLUE,7), p)
+    d.putCard(Card(color.BLACK, 14), p)
+    d.putCard(Card(color.GREEN,0), p)
     print("pile",d)
     deck = Deck(d,[Card(color.BLUE, 1), Card(color.RED, 2),
                Card(color.YELLOW, 7)])

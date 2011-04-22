@@ -22,7 +22,7 @@ def getNoOfPlayers():
     noOfPlayers = 0
     while noOfPlayers == 0:
         try:
-            noOfPlayers = int(input("How many players? "))
+            noOfPlayers = int(input("How many human players? "))
             if noOfPlayers > 10 or noOfPlayers < 1:
                 print("Number of players must be 1-10")
                 noOfPlayers = 0 
@@ -123,6 +123,9 @@ class Player:
             return True
         else:
             return False
+        
+    def isKi(self):
+        return False
 
     def __str__(self):
         return '%s\n%s' % (self.getName(), self.getHand())

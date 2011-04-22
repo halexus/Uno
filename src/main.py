@@ -23,24 +23,8 @@ import colorama
 from deck import Deck
 from discardpile import Discardpile
 import player
+import kiplayer
 
-def playARound(players, startWithId, deck, discardPile):
-    """Deprecated!!!"""
-    noOfPlayers = len(players)
-    def currentPlayer(i):
-        return players[(i+startWithId) % noOfPlayers]
-    if startWithId > noOfPlayers -1:
-        raise ValueError('No player with given ID')
-    for i in range(noOfPlayers):
-        if not deck.hasCards():
-            deck = Deck(discardPile.getWholePile()) #If deck is empty shuffle discard pile into new deck
-        print('Pile: %s' % discardPile.getCardOnTop()) #Print top card of discard pile
-        currPlayer = currentPlayer(i)
-        print(currPlayer) #Show the current player's hand
-        cardToPlay = currPlayer.playCard(discardPile.getCardOnTop(), deck) #Play a card that's allowed on discard pile
-        if cardToPlay != None: #It's None when a card was drawn
-            discardPile.putCard(cardToPlay) #Play a card and put it on discard pile
-        
 def nextId(currentId, noOfPlayers, isClockwise = True):
     if isClockwise: #Direction of play can be changed by reverse card
         return (currentId + 1) % noOfPlayers
@@ -63,6 +47,21 @@ def printCopyright():
     """
     print(copy)
     print()
+    
+def makePlayers(deck):
+    noOfHumanPlayers = player.getNoOfPlayers() #How many human players?
+    noOfKiPlayers = kiplayer.getNoOfPlayers() #How many KI players?
+    players = player.makePlayers(noOfHumanPlayers, deck) #Initialize players with deck
+    players = players + kiplayer.makePlayers(noOfKiPlayers, noOfHumanPlayers, deck)
+    return players
+
+def showNoOfCardsInHand(players, idCurrentPlayer):
+    for player in players:
+        if player.getId() == idCurrentPlayer:
+            continue
+        cardsInHand = player.getHand().noOfCardsInHand()
+        print('%s has %d cards' % (player.getName(), cardsInHand), end='; ')
+    print()
 
 if __name__ == '__main__':
     colorama.init() #Initialize color output
@@ -71,15 +70,16 @@ if __name__ == '__main__':
     printCopyright()
     discardPile = Discardpile() #Build the initial (empty) discard pile
     deck = Deck(discardPile) #Build a deck with 108 cards   
-    noOfPlayers = player.getNoOfPlayers() #How many players?
-    players = player.makePlayers(noOfPlayers, deck) #Initialize players with deck    
-    discardPile.putCard(deck.drawCard()[0]) #Put first card at discard pile
-    idCurrentPlayer = randint(0, noOfPlayers-1) #ID of first player in first round
+    players = makePlayers(deck) #Initialize players with deck
+    noOfPlayers = len(players)
+    idCurrentPlayer = randint(0, noOfPlayers-1) #ID of first player in first round  
+    discardPile.putCard(deck.drawCard()[0], players[idCurrentPlayer]) #Put first card at discard pile
     isClockwise = True #Direction of play. Can be changed by reverse card
     while True: #Game loop
         clear_screen()
         topCard = discardPile.getCardOnTop()
         currentPlayer = players[idCurrentPlayer]
+        showNoOfCardsInHand(players, idCurrentPlayer) #Print how many cards the other players have
         print('Pile: %s\n' % topCard) #Show top card on discard pile
         cardToPlay = currentPlayer.takeTurn(deck, topCard, noOfPlayers)          
         if cardToPlay == None: #It's None if a card was drawn
@@ -87,12 +87,13 @@ if __name__ == '__main__':
         elif cardToPlay == 'skip': #It's 'skip' if player's turn is skipped
             print("%s's turn is skipped." % currentPlayer.getName())
         else: #A card was chosen to play
-            discardPile.putCard(cardToPlay) #Put played card on pile
+            discardPile.putCard(cardToPlay, currentPlayer) #Put played card on pile
             if cardToPlay.isReverse(): #Did player play a reverse card?
                 isClockwise = not isClockwise #Order of play reversed
         if currentPlayer.isWinner():
             print('%s wins the game!' % currentPlayer.getName())
             break
-        idCurrentPlayer = nextId(currentPlayer.getId(), noOfPlayers, isClockwise) #Id of next player   
+        idCurrentPlayer = nextId(currentPlayer.getId(), noOfPlayers, isClockwise) #Id of next player
+    input()
     
     
